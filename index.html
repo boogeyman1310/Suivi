@@ -56,6 +56,8 @@ nav button.on{color:var(--acc);background:var(--soft)}
 #toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1}
 svg{display:block;width:100%;height:auto}
+details{margin-top:6px}summary{color:var(--acc);font-weight:600;cursor:pointer;padding:4px 0}details p{margin:6px 0 0;font-size:15px}
+.row.seg>button{flex:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -113,7 +115,7 @@ const PH=[
 ];
 const MSG=['Dix minutes, c’est déjà gagné. Le plus dur est de commencer.','Ne cherche pas la perfection, cherche la régularité.','Une séance faite, c’est une habitude qui se construit.','Ton corps s’adapte plus vite que tu ne le crois.','Même une séance courte compte. Fais-la.','Tu n’as pas besoin d’être motivé, juste de démarrer.','Chaque semaine tenue vaut mieux qu’une semaine parfaite.','Moins d’excuses, plus de tapis. Dix minutes suffisent.','Ce que tu fais aujourd’hui, tu le sentiras dans un mois.','Une journée ratée ne change rien. Reprends demain.'];
 
-const TYPES=[['bureau','Bureau : vélo ou marche'],['arc','Tir à l’arc'],['maison','Séance maison']];
+const TYPES=[['bureau','Bureau : vélo ou marche'],['arc','Tir à l’arc'],['maison','Séance maison'],['prepa','Préparation arc (élastique)']];
 const DAYS=['L','M','M','J','V','S','D'];
 let tab='today',done={};
 
@@ -138,18 +140,49 @@ return`<h1>Semaine ${w}</h1><p class="mute">${p.t} : séances de ${p.m} minutes<
 <div class="card"><h2>Poids</h2>${last?`<p class="mute">Dernière pesée : ${fmtKg(last.kg)} kg le ${parse(last.d).toLocaleDateString('fr-FR')}</p>`:'<p class="mute">Aucune pesée pour l’instant.</p>'}
 <div class="row"><input id="kg" inputmode="decimal" placeholder="Poids en kg" aria-label="Poids en kg"><button onclick="addW()">Enregistrer</button></div></div>`}
 
+const HOW={
+'Squat sur chaise':'Place une chaise derrière toi, pieds écartés largeur d’épaules. Pousse les fesses vers l’arrière comme pour t’asseoir, dos droit, regard devant. Effleure l’assise, puis remonte en poussant dans les talons. Les genoux restent dans l’axe des pieds. Expire en remontant.',
+'Pompes contre le mur':'Mains à plat sur le mur à hauteur d’épaules, un peu plus larges qu’elles. Recule les pieds d’un grand pas. Fléchis les coudes pour approcher la poitrine du mur, coudes à environ 45° du corps, puis repousse. Garde le corps en ligne droite, ventre serré. Expire en poussant.',
+'Pont fessier':'Allongé sur le dos, genoux fléchis, pieds à plat à largeur de bassin. Pousse dans les talons pour monter le bassin jusqu’à aligner épaules, hanches et genoux. Serre les fessiers, puis redescends lentement. Ne creuse pas le bas du dos.',
+'Tirage avec élastique':'Assis au sol, jambes tendues, élastique passé autour des pieds (ou fixé à une poignée de porte à hauteur de poitrine). Tire les mains vers le ventre, coudes le long du corps, en rapprochant les omoplates. Reviens lentement sans relâcher la tension. Garde les épaules basses.',
+'Planche sur les genoux':'Genoux au sol, avant-bras ou mains sous les épaules. Du genou à la tête, le corps forme une ligne droite. Serre le ventre et les fessiers, regarde le sol, respire normalement. Arrête si le bas du dos se creuse.',
+'Pompes inclinées':'Mains sur une table solide ou un canapé, un peu plus larges que les épaules, corps en ligne droite. Fléchis les coudes pour descendre la poitrine vers le support, puis repousse. Plus le support est bas, plus c’est difficile.',
+'Squat avec haltères':'Même mouvement que le squat sur chaise, avec un haltère de 1 kg dans chaque main le long du corps. Dos droit, talons au sol. Descends jusqu’à ce que les cuisses soient presque horizontales, puis remonte.',
+'Élévations latérales':'Debout, un haltère dans chaque main, bras le long du corps, coudes légèrement fléchis. Monte les bras sur les côtés jusqu’à hauteur d’épaules, pas plus haut, puis redescends en 2 ou 3 secondes. Ne balance pas le buste.',
+'Planche sur les avant-bras':'Avant-bras au sol, coudes sous les épaules, pointes de pieds au sol. Corps en ligne droite de la tête aux talons. Serre le ventre et les fessiers, ne laisse pas le bassin s’affaisser ni monter. Respire.',
+'Fentes arrière':'Debout près d’un mur pour l’équilibre, pieds à largeur de hanches. Recule une jambe d’un grand pas et fléchis les deux genoux jusqu’à frôler le sol avec le genou arrière. Remonte en poussant dans le pied avant. Buste droit.',
+'Développé épaules':'Debout ou assis, haltères à hauteur des épaules, paumes vers l’avant. Pousse-les au-dessus de la tête jusqu’à avoir les bras presque tendus, puis redescends lentement. Ne cambre pas le dos, garde le ventre serré.',
+'Rotation externe avec élastique':'Debout, élastique fixé à hauteur de coude (poignée de porte). Plie le coude à 90° et garde-le collé au corps, avec une serviette roulée entre le coude et les côtes. Éloigne la main du ventre vers l’extérieur sans bouger le coude, puis reviens lentement. Élastique léger.',
+'Écartement d’élastique':'Debout, élastique tenu à deux mains devant toi, bras tendus à hauteur d’épaules. Écarte les bras sur les côtés en rapprochant les omoplates, jusqu’à ouvrir la poitrine. Reviens lentement. Épaules basses, loin des oreilles.',
+'Tenue de traction avec élastique':'Élastique fixé à hauteur d’épaule, tenu d’une main. Tire vers l’arrière en pliant le coude, épaule basse et dos droit, puis maintiens 5 secondes. Reviens lentement. Fais 5 tenues d’un côté, puis de l’autre.',
+'Planche latérale':'Allongé sur le côté, appui sur l’avant-bras, coude sous l’épaule, genoux fléchis au sol. Monte le bassin pour aligner épaule, hanche et genou. Tiens la position, puis change de côté. Jambes tendues quand ce devient facile.',
+'Oiseau-chien':'À quatre pattes, mains sous les épaules, genoux sous les hanches. Tends un bras devant et la jambe opposée derrière, dos plat, bassin immobile. Reviens lentement, puis change de côté.',
+'Étirement des pectoraux':'Avant-bras contre l’encadrement d’une porte, coude à hauteur d’épaule. Avance doucement le buste jusqu’à sentir un étirement devant l’épaule. Tiens la durée indiquée, sans douleur, puis change de côté.'
+};
+const ARC={t:'Préparation arc',m:12,r:2,ex:[
+['Rotation externe avec élastique','12 par côté','Élastique léger, coude collé au corps.'],
+['Écartement d’élastique','12 répétitions','Omoplates rapprochées, épaules basses.'],
+['Tenue de traction avec élastique','5 fois 5 secondes par côté','Mouvement lent, épaule basse.'],
+['Planche latérale','15 secondes par côté','Sur les genoux au début.'],
+['Oiseau-chien','8 par côté','Dos plat, bassin immobile.'],
+['Étirement des pectoraux','30 secondes par côté','Sans douleur, respire calmement.']]};
+let sess='home';
+function exHtml(e){const h=HOW[e[0]];return`<div class="ex"><input type="checkbox" aria-label="Fait"><div><b>${e[0]} : ${e[1]}</b><span class="mute">${e[2]}</span>${h?`<details><summary>Comment faire</summary><p>${h}</p></details>`:''}</div></div>`}
+function seg(){return`<div class="row seg" style="margin:12px 0"><button class="${sess==='home'?'':'alt'}" onclick="sess='home';render()">Renforcement</button><button class="${sess==='arc'?'':'alt'}" onclick="sess='arc';render()">Préparation arc</button></div>`}
 function vSession(){
+if(sess==='arc')return`<h1>Préparation arc</h1><p class="mute">Environ ${ARC.m} minutes, 1 à 2 fois par semaine</p>${seg()}
+<div class="card"><p>Ces exercices renforcent le haut du dos, les épaules et le tronc, qui travaillent beaucoup au tir. Fais-les un autre jour que le tir, ou après ta séance. Ils ne remplacent pas les conseils de ton moniteur sur la technique.</p></div>
+<div class="card"><h2>${ARC.r} tours</h2><p class="mute">Passe à 3 tours quand c’est facile. Arrête-toi en cas de douleur à l’épaule.</p>${ARC.ex.map(exHtml).join('')}</div>
+<button onclick="finish('prepa')">Terminer la séance</button>`;
 const w=weekOf(new Date()),i=phaseOf(w),p=PH[i];
-return`<h1>Séance maison</h1><p class="mute">${p.t} : environ ${p.m} minutes</p>
+return`<h1>Séance maison</h1><p class="mute">${p.t} : environ ${p.m} minutes</p>${seg()}
 <div class="card"><h2>Échauffement (2 minutes)</h2><p class="mute">Cercles d’épaules, montées de genoux, rotations du bassin.</p></div>
-<div class="card"><h2>${p.r} tours</h2><p class="mute">Enchaîne les exercices, repose-toi 45 secondes entre chaque tour. Coche au fur et à mesure.</p>
-${p.ex.map((e,n)=>`<label class="ex"><input type="checkbox" onchange="tick()"><span><b>${e[0]} : ${e[1]}</b><span class="mute">${e[2]}</span></span></label>`).join('')}
+<div class="card"><h2>${p.r} tours</h2><p class="mute">Enchaîne les exercices, repose-toi 45 secondes entre chaque tour. Appuie sur « Comment faire » pour le détail.</p>${p.ex.map(exHtml).join('')}
 <p class="mute" style="margin-top:10px">Une courbature est normale. Une douleur vive ne l’est pas : arrête-toi.</p></div>
-<button onclick="finish()">Terminer la séance</button>
+<button onclick="finish('maison')">Terminer la séance</button>
 <div class="card"><h2>La progression</h2>${PH.map((x,n)=>`<div class="ph${n===i?' cur':''}"><span>${x.t}</span><span>${x.m} min, ${x.w}</span></div>`).join('')}
 <p class="mute" style="margin-top:8px">Si une phase te semble trop dure, reste-y une semaine de plus. Il n’y a pas de retard.</p></div>`}
-function tick(){}
-function finish(){const k=todayK();const a=dayLog(k).slice();if(!a.includes('maison'))a.push('maison');S.log[k]=a;save();toast('Séance enregistrée. Bravo !');tab='today';render()}
+function finish(t){const k=todayK();const a=dayLog(k).slice();if(!a.includes(t))a.push(t);S.log[k]=a;save();toast('Séance enregistrée. Bravo !');tab='today';render()}
 
 function addW(){const el=document.getElementById('kg');const v=parseFloat((el.value||'').replace(',','.'));
 if(!(v>=30&&v<=300)){toast('Entre un poids entre 30 et 300 kg');return}

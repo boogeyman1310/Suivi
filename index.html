@@ -118,7 +118,7 @@ const MSG=['Dix minutes, c’est déjà gagné. Le plus dur est de commencer.','
 
 const TYPES=[['bureau','Bureau : vélo ou marche'],['arc','Tir à l’arc'],['maison','Séance maison'],['prepa','Préparation arc (élastique)']];
 const DAYS=['L','M','M','J','V','S','D'];
-let tab='today',done={};
+let tab='today',done={},wOff=0;
 
 function dayLog(k){return S.log[k]||[]}
 function toggle(k,t){const a=dayLog(k).slice();const i=a.indexOf(t);i>=0?a.splice(i,1):a.push(t);if(a.length)S.log[k]=a;else delete S.log[k];save();render()}
@@ -127,8 +127,8 @@ function totalHome(){return Object.values(S.log).filter(a=>a.includes('maison'))
 function weekCompleteAny(){const m={};for(const k in S.log)if(S.log[k].includes('maison')){const w=weekOf(parse(k));m[w]=(m[w]||0)+1}return Object.keys(m).some(w=>m[w]>=homeTarget(+w))}
 
 function vToday(){
-const now=new Date(),k=todayK(),w=weekOf(now),p=PH[phaseOf(w)],m=mon(now);
-const hm=countHome(m,addD(m,6)),tg=homeTarget(w),wm=weekMin();
+const now=new Date(),k=todayK(),w=weekOf(now),p=PH[phaseOf(w)],m=addD(mon(now),7*wOff);
+const hm=countHome(m,addD(m,6)),tg=homeTarget(weekOf(m)),wm=weekMin(m);
 let wk='';for(let i=0;i<7;i++){const d=addD(m,i),on=hasAct(iso(d));wk+=`<div class="day${iso(d)===k?' now':''}">${DAYS[i]}<div class="dot${on?' on':''}">${on?'✓':''}</div></div>`}
 const dayN=Math.floor((now-new Date(now.getFullYear(),0,0))/864e5);
 const last=S.weights.length?S.weights[S.weights.length-1]:null;
@@ -136,8 +136,8 @@ return`<h1>Semaine ${w}</h1><p class="mute">${p.t} : séances de ${p.m} minutes<
 <div class="card hero"><p>${MSG[dayN%MSG.length]}</p></div>
 <div class="card"><h2>Aujourd’hui</h2><div class="chips">${TYPES.map(([id,l])=>`<button class="chip${dayLog(k).includes(id)?' on':''}" onclick="toggle('${k}','${id}')"><span>${l}</span><span>${dayLog(k).includes(id)?'✓ Fait':'Marquer fait'}</span></button>`).join('')}</div>
 <p class="mute" style="margin-top:10px">Pour la séance maison, ouvre l’onglet Séance : elle se coche toute seule à la fin.</p></div>
-<div class="card"><h2>Cette semaine</h2><div class="week">${wk}</div>
-<p style="margin-top:12px">Séances maison : <b>${hm} sur ${tg}</b></p><div class="bar"><i style="width:${Math.min(100,hm/tg*100)}%"></i></div>${wm?`<p class="mute">Marche et vélo importés : ${wm} min cette semaine</p>`:''}</div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><button class="alt" style="width:auto;padding:6px 14px" onclick="wOff--;render()" aria-label="Semaine précédente">◀</button><h2 style="margin:0">${wOff===0?'Cette semaine':'Semaine '+weekOf(m)}</h2><button class="alt" style="width:auto;padding:6px 14px" onclick="wOff=Math.min(0,wOff+1);render()" aria-label="Semaine suivante" ${wOff===0?'disabled':''}>▶</button></div>${wOff!==0?`<p class="mute" style="text-align:center;margin:4px 0 0">${m.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} au ${addD(m,6).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</p>`:''}<div class="week">${wk}</div>
+<p style="margin-top:12px">Séances maison : <b>${hm} sur ${tg}</b></p><div class="bar"><i style="width:${Math.min(100,hm/tg*100)}%"></i></div>${wm?`<p class="mute">Marche et vélo importés : ${wm} min ${wOff===0?'cette semaine':'cette semaine-là'}</p>`:''}</div>
 <div class="card"><h2>Poids</h2>${last?`<p class="mute">Dernière pesée : ${fmtKg(last.kg)} kg le ${parse(last.d).toLocaleDateString('fr-FR')}</p>`:'<p class="mute">Aucune pesée pour l’instant.</p>'}
 <button class="alt" onclick="go('weight')">Ajouter une pesée</button></div>`}
 
@@ -186,7 +186,7 @@ return`<h1>Séance maison</h1><p class="mute">${p.t} : environ ${p.m} minutes</p
 function finish(t){const k=todayK();const a=dayLog(k).slice();if(!a.includes(t))a.push(t);S.log[k]=a;save();toast('Séance enregistrée. Bravo !');tab='today';render()}
 
 function hasAct(k){return dayLog(k).length>0||Object.values(S.hae.w).some(x=>x.d===k)}
-function weekMin(){const m=mon(new Date()),a=iso(m),b=iso(addD(m,6));return Object.values(S.hae.w).filter(x=>x.d>=a&&x.d<=b).reduce((t,x)=>t+x.min,0)}
+function weekMin(m0){const m=m0||mon(new Date()),a=iso(m),b=iso(addD(m,6));return Object.values(S.hae.w).filter(x=>x.d>=a&&x.d<=b).reduce((t,x)=>t+x.min,0)}
 function effortLabel(n){return n==null?'non noté':n<=3?'Facile':n<=6?'Modéré':n<=8?'Difficile':'Maximal'}
 function sumQ(a){return Array.isArray(a)?a.reduce((t,x)=>t+((x&&x.qty)||0),0):((a&&a.qty)||0)}
 function importHAE(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
@@ -254,7 +254,7 @@ function render(){
 document.getElementById('app').innerHTML=TABS.find(t=>t[0]===tab)[2]();
 document.getElementById('nav').innerHTML=TABS.map(t=>`<button class="${t[0]===tab?'on':''}" onclick="go('${t[0]}')">${t[1]}</button>`).join('');
 }
-function go(t){tab=t;render();window.scrollTo(0,0)}
+function go(t){tab=t;if(t==='today')wOff=0;render();window.scrollTo(0,0)}
 render();
 </script>
 </body>

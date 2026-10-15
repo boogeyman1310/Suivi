@@ -139,7 +139,7 @@ return`<h1>Semaine ${w}</h1><p class="mute">${p.t} : séances de ${p.m} minutes<
 <div class="card"><h2>Cette semaine</h2><div class="week">${wk}</div>
 <p style="margin-top:12px">Séances maison : <b>${hm} sur ${tg}</b></p><div class="bar"><i style="width:${Math.min(100,hm/tg*100)}%"></i></div>${wm?`<p class="mute">Marche et vélo importés : ${wm} min cette semaine</p>`:''}</div>
 <div class="card"><h2>Poids</h2>${last?`<p class="mute">Dernière pesée : ${fmtKg(last.kg)} kg le ${parse(last.d).toLocaleDateString('fr-FR')}</p>`:'<p class="mute">Aucune pesée pour l’instant.</p>'}
-<div class="row"><input id="kg" inputmode="decimal" placeholder="Poids en kg" aria-label="Poids en kg"><button onclick="addW()">Enregistrer</button></div></div>`}
+<button class="alt" onclick="go('weight')">Ajouter une pesée</button></div>`}
 
 const HOW={
 'Squat sur chaise':'Place une chaise derrière toi, pieds écartés largeur d’épaules. Pousse les fesses vers l’arrière comme pour t’asseoir, dos droit, regard devant. Effleure l’assise, puis remonte en poussant dans les talons. Les genoux restent dans l’axe des pieds. Expire en remontant.',
@@ -195,8 +195,8 @@ r.onload=()=>{try{const j=JSON.parse(r.result),dd=j.data||j;let nw=0;
 if(e&&typeof e==='object'&&e.qty!=null){kc=/kj/i.test(e.units||'')?e.qty/4.184:e.qty}
 const du=typeof x.duration==='object'?(x.duration&&x.duration.qty)||0:(x.duration||0);
 const ef=x.estimatedEffortScore;
-const rec={d:String(x.start).slice(0,10),n:x.name||'Séance',min:Math.round(du/60),st:Math.round(sumQ(x.stepCount)),kc:kc==null?null:Math.round(kc),hr:x.avgHeartRate&&x.avgHeartRate.qty?Math.round(x.avgHeartRate.qty):null,ef:ef&&ef.qty!=null?ef.qty:null};
-if(!S.hae.w[id])nw++;S.hae.w[id]=rec});
+const rec={d:String(x.start).slice(0,10),n:x.name||'Séance',in:!!x.isIndoor||/int[ée]rieur|indoor/i.test(x.name||''),min:Math.round(du/60),st:Math.round(sumQ(x.stepCount)),kc:kc==null?null:Math.round(kc),hr:x.avgHeartRate&&x.avgHeartRate.qty?Math.round(x.avgHeartRate.qty):null,ef:ef&&ef.qty!=null?ef.qty:null};
+const old=S.hae.w[id];if(!old)nw++;if(rec.in&&!(old&&old.b)){const a=(S.log[rec.d]||[]).slice();if(!a.includes('bureau')){a.push('bureau');S.log[rec.d]=a}}rec.b=1;S.hae.w[id]=rec});
 const sc=(dd.metrics||[]).find(m=>m.name==='step_count');
 if(sc&&sc.data)sc.data.forEach(p=>{S.hae.s[String(p.date).slice(0,10)]=Math.round(p.qty)});
 save();toast(nw+' nouvelle(s) séance(s) importée(s)');render()}catch(e){toast('Fichier non reconnu : choisis le fichier .json')}};

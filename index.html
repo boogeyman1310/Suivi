@@ -58,6 +58,7 @@ nav button.on{color:var(--acc);background:var(--soft)}
 svg{display:block;width:100%;height:auto}
 details{margin-top:6px}summary{color:var(--acc);font-weight:600;cursor:pointer;padding:4px 0}details p{margin:6px 0 0;font-size:15px}
 .row.seg>button{flex:1}
+a.lk{color:var(--acc);font-weight:650;padding:6px 4px;display:inline-block}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -249,7 +250,7 @@ b=S.rec.map(x=>`<div class="card" style="margin:8px 0"><b>${esc(x.t)}</b><p clas
 +`<div class="card"><h2>${r?'Modifier la recette':'Nouvelle recette'}</h2><input id="rt" placeholder="Titre (ex. Poulet curry coco)" value="${r?esc(r.t):''}"><input id="rp" inputmode="numeric" style="margin-top:8px" placeholder="Nombre de portions de la liste d’ingrédients" value="${r?r.p:''}"><textarea id="ri" rows="7" style="margin-top:8px;width:100%;font:inherit;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)" placeholder="Un ingrédient par ligne, avec la quantité :&#10;300 g poulet&#10;1 oignon&#10;150 ml lait de coco">${r?esc(r.ing):''}</textarea><button style="margin-top:8px" onclick="saveRec()">Enregistrer</button></div>`}
 else{const L=shopList();
 b=wkNav()+(L.length?RAYONS.map((n,ri)=>{const it=L.filter(i=>(i.x?6:rayon(i.n))===ri);return it.length?`<div class="card" style="margin:8px 0"><h2>${n}</h2>${it.map(i=>`<label class="ex" style="align-items:center"><input type="checkbox" ${S.shop[i.k]?'checked':''} data-k="${esc(i.k)}" onchange="chk(this)"><span>${fq(i)}${esc(i.n)}</span></label>`).join('')}</div>`:''}).join('')+`<div class="chips" style="margin:12px 0"><button onclick="toReminders()">Envoyer vers Rappels</button><button class="alt" onclick="copyList()">Copier la liste</button></div>`:'<div class="card"><p class="mute">Aucune course pour cette semaine. Ajoute des recettes au planning.</p></div>')
-+`<div class="card"><h2>Ajouter un article</h2><div class="row"><input id="ex" placeholder="Ex. café, yaourts"><button onclick="addExtra()">Ajouter</button></div>${S.extra.length?`<p class="mute" style="margin-top:8px">Articles ajoutés : ${S.extra.map((e,i)=>`${esc(e)} <a href="#" onclick="S.extra.splice(${i},1);save();render();return false">retirer</a>`).join(', ')}</p>`:''}</div>`}
++`<div class="card"><h2>Ajouter un article</h2><div class="row"><input id="ex" placeholder="Ex. café, yaourts"><button onclick="addExtra()">Ajouter</button></div>${S.extra.length?`<p class="mute" style="margin-top:8px">Articles ajoutés : ${S.extra.map((e,i)=>`${esc(e)} <a class="lk" href="#" onclick="S.extra.splice(${i},1);save();render();return false">retirer</a>`).join(', ')}<br><a class="lk" href="#" onclick="S.extra=[];save();render();return false">Tout retirer</a></p>`:''}</div>`}
 return`<h1>Repas</h1><p class="mute">Planning, recettes et liste de courses</p>${mseg()}${b}`}
 function setMeal(o,k,v){const mm=mealsOf(mMon(o));if(v.trim())mm[k]=v.trim();else delete mm[k];save()}
 function saveRec(){const t=document.getElementById('rt').value.trim(),p=parseInt(document.getElementById('rp').value)||1,ing=document.getElementById('ri').value.trim();
